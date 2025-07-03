@@ -226,14 +226,4 @@ class StudyAppViewModel(
             lazyListState.scrollToItem(savedIndex, savedOffset)
         }
     }
-
-    override fun onCleared() {
-        super.onCleared()
-        Log.d("StudyAppViewModel", "onCleared")
-        _uiState.update {
-            it.copy(
-                hasShownEndWarning = false
-            )
-        }
-    }
 }
