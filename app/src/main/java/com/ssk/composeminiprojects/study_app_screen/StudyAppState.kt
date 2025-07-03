@@ -6,7 +6,7 @@ import com.ssk.composeminiprojects.utils.Topic
 data class StudyAppState(
     val pinnedLessons: List<LessonTopic> = emptyList(),
     val selectedTopic: Topic? = null,
-    val allLessons: List<LessonTopic> = emptyList(), // Original list, never modified
+    val allLessons: List<LessonTopic> = emptyList(),
     val isPinned: Boolean = false,
     val categoryIndexMap: Map<String, Int> = emptyMap(),
     val scrollProgress: Float = 0f,
