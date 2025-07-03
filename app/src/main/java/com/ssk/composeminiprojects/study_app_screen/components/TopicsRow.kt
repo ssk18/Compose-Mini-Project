@@ -79,14 +79,7 @@ fun TopicCard(
 fun TopicsRowPreview() {
     ComposeMiniProjectsTheme {
         TopicsRow(
-            topics = listOf(
-                Topic.Science,
-                Topic.Math,
-                Topic.Language,
-                Topic.History,
-                Topic.Literature,
-                Topic.Geography
-            ),
+            topics = Topic.entries,
             onClick = {}
         )
     }

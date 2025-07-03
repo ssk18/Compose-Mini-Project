@@ -1,10 +1,13 @@
 package com.ssk.composeminiprojects.study_app_screen
 
+import android.util.Log
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssk.composeminiprojects.study_app_screen.StudyAppEvent.*
+import com.ssk.composeminiprojects.study_app_screen.StudyAppEvent.NavigateToStudyDetails
+import com.ssk.composeminiprojects.study_app_screen.StudyAppEvent.ShowSnackBar
 import com.ssk.composeminiprojects.utils.lessonTopics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -20,7 +23,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class StudyAppViewModel : ViewModel() {
+class StudyAppViewModel(
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+) : ViewModel() {
+
+    companion object {
+        private const val KEY_SCROLL_INDEX = "scroll_index"
+        private const val KEY_SCROLL_OFFSET = "scroll_offset"
+    }
 
     private val _uiState = MutableStateFlow(StudyAppState())
     val uiState: StateFlow<StudyAppState> = _uiState
@@ -31,7 +41,10 @@ class StudyAppViewModel : ViewModel() {
             initialValue = StudyAppState()
         )
 
-    val lazyListState = LazyListState()
+    val lazyListState = LazyListState(
+        firstVisibleItemIndex = savedStateHandle.get<Int>(KEY_SCROLL_INDEX) ?: 0,
+        firstVisibleItemScrollOffset = savedStateHandle.get<Int>(KEY_SCROLL_OFFSET) ?: 0
+    )
 
     val canScrollToTop = snapshotFlow { lazyListState.firstVisibleItemIndex }
         .map { index ->
@@ -49,10 +62,12 @@ class StudyAppViewModel : ViewModel() {
     private fun loadLessons() {
         _uiState.update {
             it.copy(
-                lessons = lessonTopics
+                allLessons = lessonTopics
             )
         }
         startScrollProgressTracking()
+        startEndOfListMonitoring()
+        restoreScrollPosition()
     }
 
     private fun startScrollProgressTracking() {
@@ -65,6 +80,37 @@ class StudyAppViewModel : ViewModel() {
                     }
                 }
         }
+    }
+
+    private fun startEndOfListMonitoring() {
+        viewModelScope.launch {
+            snapshotFlow { calculateRemainingItems() }
+                .distinctUntilChanged()
+                .collect { remainingItems ->
+                    val currentState = _uiState.value
+                    val layoutInfo = lazyListState.layoutInfo
+                    val totalItems = layoutInfo.totalItemsCount
+
+                    if (remainingItems <= 10 &&
+                        totalItems > 0 &&
+                        !currentState.hasShownEndWarning &&
+                        !currentState.isAutoScrolling) {
+
+                        _eventChannel.trySend(ShowSnackBar("Reaching the end of the list!"))
+                        _uiState.update {
+                            it.copy(hasShownEndWarning = true)
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun calculateRemainingItems(): Int {
+        val layoutInfo = lazyListState.layoutInfo
+        val totalItems = layoutInfo.totalItemsCount
+        val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        
+        return maxOf(0, totalItems - lastVisibleIndex - 1)
     }
 
     private fun calculateScrollProgress(): Float {
@@ -95,7 +141,6 @@ class StudyAppViewModel : ViewModel() {
                     _uiState.update {
                         it.copy(
                             pinnedLessons = it.pinnedLessons.plus(action.lesson),
-                            lessons = it.lessons.minus(action.lesson),
                             isPinned = true
                         )
                     }
@@ -116,7 +161,6 @@ class StudyAppViewModel : ViewModel() {
                 _uiState.update {
                     it.copy(
                         pinnedLessons = it.pinnedLessons.minus(action.lesson),
-                        lessons = it.lessons.plus(action.lesson),
                         isPinned = false
                     )
                 }
@@ -127,8 +171,11 @@ class StudyAppViewModel : ViewModel() {
                 val targetIndex = _uiState.value.categoryIndexMap[targetCategory]
 
                 if (targetIndex != null) {
+                    _uiState.update { it.copy(isAutoScrolling = true) }
+                    
                     viewModelScope.launch {
                         lazyListState.scrollToItem(targetIndex)
+                        _uiState.update { it.copy(isAutoScrolling = false) }
                     }
                 }
 
@@ -142,15 +189,51 @@ class StudyAppViewModel : ViewModel() {
                     it.copy(categoryIndexMap = action.map)
                 }
             }
-        }
-    }
 
-    fun scrollToTop(uiScope: CoroutineScope) {
-        viewModelScope.launch {
-            withContext(uiScope.coroutineContext) {
-                lazyListState.animateScrollToItem(0)
+            is StudyAppActions.OnLessonClicked -> {
+                saveScrollPosition()
+                _uiState.update {
+                    it.copy(
+                        hasShownEndWarning = false
+                    )
+                }
+                _eventChannel.trySend(NavigateToStudyDetails(action.lesson, action.topic))
             }
         }
     }
 
+    fun scrollToTop(uiScope: CoroutineScope) {
+        _uiState.update { it.copy(isAutoScrolling = true) }
+        
+        viewModelScope.launch {
+            withContext(uiScope.coroutineContext) {
+                lazyListState.animateScrollToItem(0)
+                _uiState.update { it.copy(isAutoScrolling = false) }
+            }
+        }
+    }
+
+    private fun saveScrollPosition() {
+        savedStateHandle[KEY_SCROLL_INDEX] = lazyListState.firstVisibleItemIndex
+        savedStateHandle[KEY_SCROLL_OFFSET] = lazyListState.firstVisibleItemScrollOffset
+    }
+
+    fun restoreScrollPosition() {
+        val savedIndex = savedStateHandle.get<Int>(KEY_SCROLL_INDEX) ?: 0
+        val savedOffset = savedStateHandle.get<Int>(KEY_SCROLL_OFFSET) ?: 0
+        
+        viewModelScope.launch {
+            lazyListState.scrollToItem(savedIndex, savedOffset)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("StudyAppViewModel", "onCleared")
+        _uiState.update {
+            it.copy(
+                hasShownEndWarning = false
+            )
+        }
+    }
 }

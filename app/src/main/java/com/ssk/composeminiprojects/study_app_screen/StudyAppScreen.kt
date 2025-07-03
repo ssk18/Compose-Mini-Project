@@ -1,7 +1,8 @@
-@file:OptIn(ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 
 package com.ssk.composeminiprojects.study_app_screen
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,21 +45,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssk.composeminiprojects.R
 import com.ssk.composeminiprojects.study_app_screen.components.EdgeToEdgeProgressBar
 import com.ssk.composeminiprojects.study_app_screen.components.LessonItem
-import com.ssk.composeminiprojects.study_app_screen.components.StudyAppScaffold
-import com.ssk.composeminiprojects.study_app_screen.components.StudySnackBar
+import com.ssk.composeminiprojects.components.StudyAppScaffold
+import com.ssk.composeminiprojects.components.StudySnackBar
 import com.ssk.composeminiprojects.study_app_screen.components.TopicsRow
 import com.ssk.composeminiprojects.ui.theme.ComposeMiniProjectsTheme
+import com.ssk.composeminiprojects.ui.theme.SetStatusBarIconsColor
 import com.ssk.composeminiprojects.ui.theme.StudyAppOnSurface
 import com.ssk.composeminiprojects.ui.theme.StudyAppPrimary
 import com.ssk.composeminiprojects.ui.theme.StudyAppTertiaryText
 import com.ssk.composeminiprojects.utils.ObserveAsEvents
 import com.ssk.composeminiprojects.utils.Topic
+import kotlinx.coroutines.launch
 
 @Composable
 fun StudyAppScreenRoot(
     modifier: Modifier = Modifier,
-    viewModel: StudyAppViewModel
+    viewModel: StudyAppViewModel,
+    navigateToDetails: (String, String) -> Unit
 ) {
+    SetStatusBarIconsColor(darkIcons = true)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val canScrollToTop by viewModel.canScrollToTop.collectAsStateWithLifecycle()
@@ -67,9 +72,15 @@ fun StudyAppScreenRoot(
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             is StudyAppEvent.ShowSnackBar -> {
-                snackBarHostState.showSnackbar(
-                    message = event.message
-                )
+                scope.launch {
+                    snackBarHostState.showSnackbar(
+                        message = event.message
+                    )
+                }
+            }
+
+            is StudyAppEvent.NavigateToStudyDetails -> {
+                navigateToDetails(event.title, event.category)
             }
         }
     }
@@ -112,7 +123,7 @@ fun StudyAppScreenRoot(
                         .navigationBarsPadding()
                 )
             }
-        }
+        },
     ) {
         StudyAppScreen(
             studyAppState = state,
@@ -147,14 +158,7 @@ fun StudyAppScreen(
     ) {
         Spacer(modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
         TopicsRow(
-            topics = listOf(
-                Topic.Science,
-                Topic.Math,
-                Topic.Language,
-                Topic.History,
-                Topic.Literature,
-                Topic.Geography
-            ),
+            topics = Topic.entries,
             onClick = { topic ->
                 onAction(StudyAppActions.ScrollToCategory(topic))
             }
@@ -173,7 +177,6 @@ fun StudyAppScreen(
             val categoryIndexMap = mutableMapOf<String, Int>()
             var currentIndex = 0
 
-            // Pinned lessons
             items(
                 items = studyAppState.pinnedLessons,
             ) {
@@ -182,6 +185,9 @@ fun StudyAppScreen(
                     lessonTopic = it,
                     onClick = {
                         onAction(StudyAppActions.OnLessonUnpinned(it))
+                    },
+                    onLessonClick = { title, category ->
+                        onAction(StudyAppActions.OnLessonClicked(title, category))
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -192,7 +198,6 @@ fun StudyAppScreen(
                 val category = entry.key
                 val categoryLessons = entry.value
 
-                // Spacer before category (except first)
                 if (index > 0) {
                     item(key = "spacer_$category") {
                         Spacer(modifier = Modifier.height(16.dp))
@@ -201,7 +206,6 @@ fun StudyAppScreen(
                 }
 
                 categoryIndexMap[category] = currentIndex
-                // Sticky header for category
                 stickyHeader(key = category) {
                     Column(
                         modifier = Modifier
@@ -218,7 +222,6 @@ fun StudyAppScreen(
                 }
                 currentIndex++
 
-                // Lessons in this category
                 items(
                     items = categoryLessons,
                 ) { lesson ->
@@ -227,6 +230,9 @@ fun StudyAppScreen(
                         lessonTopic = lesson,
                         onClick = {
                             onAction(StudyAppActions.OnLessonPinned(lesson))
+                        },
+                        onLessonClick = { title, category ->
+                            onAction(StudyAppActions.OnLessonClicked(title, category))
                         }
                     )
                     Spacer(modifier = Modifier.height(8.dp))

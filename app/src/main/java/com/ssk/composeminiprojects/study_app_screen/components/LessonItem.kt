@@ -2,6 +2,7 @@ package com.ssk.composeminiprojects.study_app_screen.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -35,7 +36,8 @@ fun LessonItem(
     modifier: Modifier = Modifier,
     isPinned: Boolean,
     lessonTopic: LessonTopic,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLessonClick: (String, String) -> Unit
 ) {
     Surface(
         modifier = modifier
@@ -49,7 +51,10 @@ fun LessonItem(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .clickable {
+                    onLessonClick(lessonTopic.title, lessonTopic.category)
+                },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -89,7 +94,8 @@ fun LessonItemPreview() {
                 title = "Photosynthesis Basics",
                 category = "Science"
             ),
-            onClick = {}
+            onClick = {},
+            onLessonClick = { _, _ -> }
         )
     }
 }

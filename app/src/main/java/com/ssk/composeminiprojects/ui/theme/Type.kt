@@ -57,6 +57,11 @@ val Typography = Typography(
         fontSize = 22.sp,
         lineHeight = 28.sp
 
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = PoltawskyMedium,
+        fontSize = 32.sp,
+        lineHeight = 36.sp
     )
     /* Other default text styles to override
     titleLarge = TextStyle(

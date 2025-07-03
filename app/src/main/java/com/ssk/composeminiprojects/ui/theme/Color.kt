@@ -18,6 +18,8 @@ val StudyAppPrimaryText = Color(0xFF13182C)
 val StudyAppSecondaryText = Color(0xFF4C4F59)
 val StudyAppTertiaryText = Color(0xFF9296D1)
 val StudyAppIcon = Color(0xFF9FA3Af)
+val TitleCardColor = Color(0xFFE5FBF2)
+val TitleTextColor = Color(0xFF03A564)
 
 val StudyAppGradient = listOf(
     Color(0xFF6B74F8),

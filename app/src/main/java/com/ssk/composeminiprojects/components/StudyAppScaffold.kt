@@ -1,4 +1,4 @@
-package com.ssk.composeminiprojects.study_app_screen.components
+package com.ssk.composeminiprojects.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,12 +11,14 @@ import androidx.compose.ui.Modifier
 fun StudyAppScaffold(
     modifier: Modifier = Modifier,
     bottomBar: @Composable () -> Unit = {},
-    floatingActionButton: @Composable () -> Unit,
+    topBar: @Composable () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
     snackBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
         modifier = modifier,
+        topBar = topBar,
         bottomBar = bottomBar,
         floatingActionButton = floatingActionButton,
         snackbarHost = snackBar,

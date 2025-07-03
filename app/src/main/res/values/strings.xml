@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">ComposeMiniProjects</string>
+    <string name="course_details">Course Details</string>
+    <string name="navigate_back">navigate back</string>
+    <string name="you_can_only_pin_5_lessons">You can only pin 5 lessons</string>
 </resources>

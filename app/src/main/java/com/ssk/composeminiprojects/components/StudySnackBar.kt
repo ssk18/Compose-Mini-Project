@@ -1,13 +1,15 @@
-package com.ssk.composeminiprojects.study_app_screen.components
+package com.ssk.composeminiprojects.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,11 +41,12 @@ fun StudyAppEventBanner(
             .fillMaxWidth()
             .background(StudyAppPrimary)
             .padding(12.dp),
-        contentAlignment = androidx.compose.ui.Alignment.Center
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
             textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodySmall,
             color = StudyAppSurface
         )
     }
