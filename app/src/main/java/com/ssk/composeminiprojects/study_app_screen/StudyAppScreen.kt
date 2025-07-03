@@ -167,6 +167,30 @@ fun StudyAppScreen(
             progress = studyAppState.scrollProgress
         )
         Spacer(Modifier.height(40.dp))
+        
+        // Fixed pinned items section (non-scrollable)
+        if (studyAppState.pinnedLessons.isNotEmpty()) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                studyAppState.pinnedLessons.forEach { lesson ->
+                    LessonItem(
+                        isPinned = true,
+                        lessonTopic = lesson,
+                        onClick = {
+                            onAction(StudyAppActions.OnLessonUnpinned(lesson))
+                        },
+                        onLessonClick = { title, category ->
+                            onAction(StudyAppActions.OnLessonClicked(title, category))
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+        
+        // Scrollable lessons section
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
@@ -175,23 +199,6 @@ fun StudyAppScreen(
             val groupedLessons = studyAppState.lessons.groupBy { it.category }
             val categoryIndexMap = mutableMapOf<String, Int>()
             var currentIndex = 0
-
-            items(
-                items = studyAppState.pinnedLessons,
-            ) {
-                LessonItem(
-                    isPinned = true,
-                    lessonTopic = it,
-                    onClick = {
-                        onAction(StudyAppActions.OnLessonUnpinned(it))
-                    },
-                    onLessonClick = { title, category ->
-                        onAction(StudyAppActions.OnLessonClicked(title, category))
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            currentIndex += studyAppState.pinnedLessons.size
 
             groupedLessons.entries.forEachIndexed { index, entry ->
                 val category = entry.key
