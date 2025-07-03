@@ -2,7 +2,6 @@
 
 package com.ssk.composeminiprojects.study_app_screen
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -43,10 +42,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssk.composeminiprojects.R
-import com.ssk.composeminiprojects.study_app_screen.components.EdgeToEdgeProgressBar
-import com.ssk.composeminiprojects.study_app_screen.components.LessonItem
 import com.ssk.composeminiprojects.components.StudyAppScaffold
 import com.ssk.composeminiprojects.components.StudySnackBar
+import com.ssk.composeminiprojects.study_app_screen.components.EdgeToEdgeProgressBar
+import com.ssk.composeminiprojects.study_app_screen.components.LessonItem
 import com.ssk.composeminiprojects.study_app_screen.components.TopicsRow
 import com.ssk.composeminiprojects.ui.theme.ComposeMiniProjectsTheme
 import com.ssk.composeminiprojects.ui.theme.SetStatusBarIconsColor
