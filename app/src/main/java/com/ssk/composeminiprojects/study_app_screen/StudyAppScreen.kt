@@ -167,8 +167,7 @@ fun StudyAppScreen(
             progress = studyAppState.scrollProgress
         )
         Spacer(Modifier.height(40.dp))
-        
-        // Fixed pinned items section (non-scrollable)
+
         if (studyAppState.pinnedLessons.isNotEmpty()) {
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp)
